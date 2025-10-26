@@ -1,0 +1,8 @@
+{
+  "name": "AI Business Card Scanner",
+  "description": "Upload a photo of a business card, add notes, and let AI extract contact details and draft a personalized follow-up email.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}
