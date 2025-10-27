@@ -54,9 +54,12 @@ export const useFileUpload = (): UseFileUploadReturn => {
                         analyzeBusinessCardImage(fileData)
                     ]);
 
+                    // Append tags to notes field
+                    const tagsText = extractedData.tags ? `Tags: ${extractedData.tags}` : '';
+
                     let finalContactInfo: ContactInfo = {
                         ...extractedData,
-                        notes: '',
+                        notes: tagsText,
                         tags: extractedData.tags || ''
                     };
 

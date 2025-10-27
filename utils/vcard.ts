@@ -6,10 +6,8 @@ import type { ContactInfo } from '../types';
  * @returns vCard formatted string
  */
 export const generateVCard = (contactInfo: ContactInfo): string => {
-    const noteContent = [
-        contactInfo.notes || '',
-        contactInfo.tags ? `Tags: ${contactInfo.tags}` : ''
-    ].filter(Boolean).join('\n\n');
+    // Notes field now includes tags, so use it directly
+    const noteContent = contactInfo.notes || '';
 
     return `BEGIN:VCARD
 VERSION:3.0

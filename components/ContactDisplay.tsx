@@ -189,23 +189,6 @@ export const ContactDisplay: React.FC<ContactDisplayProps> = ({
                                 />
                             </td>
                         </tr>
-
-                        {/* Tags */}
-                        <tr>
-                            <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                Tags
-                            </td>
-                            <td className="px-3 py-4">
-                                <input
-                                    type="text"
-                                    value={contactInfo.tags}
-                                    onChange={(e) => onUpdate('tags', e.target.value)}
-                                    className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
-                                    placeholder="prospect, conference2024, tech"
-                                />
-                                <p className="mt-1 text-xs text-gray-500">Comma-separated tags for organization.</p>
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
