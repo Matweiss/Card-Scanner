@@ -1,7 +1,14 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { ContactInfo } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Get API key from environment variable (replaced at build time by Vite)
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY;
+
+if (!apiKey) {
+    console.error('GEMINI_API_KEY is not set. Please add it to your environment variables.');
+}
+
+const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
 const fileToGenerativePart = (base64Data: string, mimeType: string) => {
   return {
