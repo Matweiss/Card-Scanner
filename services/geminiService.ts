@@ -123,31 +123,16 @@ export async function draftFollowUpEmail(contactInfo: ContactInfo, emailNotes: s
     `;
 
     try {
-        console.log('[Gemini] Attempting to generate email with gemini-2.5-pro...');
+        console.log('[Gemini] Generating email with gemini-2.5-flash (reliable model)...');
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-pro',
+            model: 'gemini-2.5-flash',
             contents: prompt,
-            config: {
-                tools: [{googleSearch: {}}],
-            },
         });
 
         return response.text;
     } catch (error) {
-        console.error('[Gemini] Error with gemini-2.5-pro, trying fallback without search...', error);
-
-        // Fallback: Try without Google Search tool
-        try {
-            const fallbackResponse = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-            });
-
-            return fallbackResponse.text;
-        } catch (fallbackError) {
-            console.error('[Gemini] Fallback also failed:', fallbackError);
-            throw new Error(`Failed to generate email. Please check your API key and try again. Error: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`);
-        }
+        console.error('[Gemini] Email generation failed:', error);
+        throw new Error(`Failed to generate email. Please check your API key and try again. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 }
 
