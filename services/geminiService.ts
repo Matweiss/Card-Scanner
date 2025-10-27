@@ -122,15 +122,33 @@ export async function draftFollowUpEmail(contactInfo: ContactInfo, emailNotes: s
       The final email should be concise, professional, and feel highly personalized, not like a generic template.
     `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-pro',
-      contents: prompt,
-      config: {
-        tools: [{googleSearch: {}}],
-      },
-    });
+    try {
+        console.log('[Gemini] Attempting to generate email with gemini-2.5-pro...');
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-pro',
+            contents: prompt,
+            config: {
+                tools: [{googleSearch: {}}],
+            },
+        });
 
-    return response.text;
+        return response.text;
+    } catch (error) {
+        console.error('[Gemini] Error with gemini-2.5-pro, trying fallback without search...', error);
+
+        // Fallback: Try without Google Search tool
+        try {
+            const fallbackResponse = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+            });
+
+            return fallbackResponse.text;
+        } catch (fallbackError) {
+            console.error('[Gemini] Fallback also failed:', fallbackError);
+            throw new Error(`Failed to generate email. Please check your API key and try again. Error: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`);
+        }
+    }
 }
 
 
