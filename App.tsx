@@ -153,7 +153,7 @@ const App: React.FC = () => {
     // Determine overall loading state
     const isLoading = isFileLoading || isGeneratingEmail || isTranscribing;
     const loadingText = isGeneratingEmail
-        ? 'Generating Email...'
+        ? 'Generating Prompt...'
         : isTranscribing
         ? 'Transcribing...'
         : fileLoadingText;

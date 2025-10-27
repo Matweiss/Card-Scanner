@@ -88,52 +88,42 @@ export async function analyzeBusinessCardImage(fileData: { data: string; mimeTyp
 }
 
 export async function draftFollowUpEmail(contactInfo: ContactInfo, emailNotes: string): Promise<string> {
-    const prompt = `
-      You are a highly skilled professional communication assistant, an expert in crafting personalized and impactful business emails.
-      Your task is to draft a friendly and professional follow-up email to ${contactInfo.firstName} ${contactInfo.lastName} from ${contactInfo.company}.
+    // Generate a prompt that users can copy and paste into Claude, Gemini, or ChatGPT
+    const promptForUser = `I need help drafting a professional follow-up email. Here's the context:
 
-      **Context and Information:**
-      - Recipient's Name: ${contactInfo.firstName} ${contactInfo.lastName}
-      - Recipient's Title: ${contactInfo.title}
-      - Recipient's Company: ${contactInfo.company}
-      - Recipient's Website: ${contactInfo.website}
-      - Contact Tags: ${contactInfo.tags}
-      - My permanent notes about this contact: "${contactInfo.notes}"
-      - My notes for this specific email draft (includes AI insights): "${emailNotes}"
+**Recipient Information:**
+- Name: ${contactInfo.firstName} ${contactInfo.lastName}
+- Title: ${contactInfo.title}
+- Company: ${contactInfo.company}
+- Email: ${contactInfo.email}
+- Phone: ${contactInfo.phone}
+- Website: ${contactInfo.website}
+- Address: ${contactInfo.address}
 
-      **Instructions for Drafting:**
+**Context & Notes:**
+${contactInfo.notes ? `Contact Notes: ${contactInfo.notes}\n` : ''}${emailNotes ? `Email Notes: ${emailNotes}\n` : ''}
+**Instructions:**
+Please draft a friendly and professional follow-up email to ${contactInfo.firstName} that:
 
-      1.  **Analyze and Infer:** Based on the company name, title, website, tags, and notes, first infer the company's industry (e.g., "SaaS", "Healthcare Tech", "Digital Marketing Agency"). This will help you tailor the language.
+1. Uses a warm, personalized greeting
+2. References our previous conversation or meeting (based on the notes above)
+3. Shows genuine interest in their company and role
+4. If there are AI Insights in the notes, incorporates specific details about their company (e.g., recent news, products, or initiatives)
+5. Clearly states the purpose of my follow-up with a specific value proposition
+6. Ends with a clear, easy-to-act-on call to action (e.g., scheduling a brief call)
+7. Uses a professional closing
 
-      2.  **Synthesize Context:** Carefully combine my permanent notes with the email draft notes. The "AI Insights" section in the email notes is especially important for personalization. Identify the core reason for our previous interaction and the main goal of this follow-up.
+The email should be:
+- Concise (3-4 short paragraphs)
+- Highly personalized, not template-like
+- Professional yet conversational
+- Focused on providing value to them
 
-      3.  **Craft the Email:**
-          *   **Subject Line:** Create a concise and compelling subject line. It should be relevant to our last conversation (e.g., "Following up on our chat about AI").
-          *   **Greeting:** Start with a warm and personal greeting (e.g., "Hi ${contactInfo.firstName},").
-          *   **Opening:** Briefly and warmly reference where you met or your last conversation, as mentioned in the notes.
-          *   **Body - Add Value and Personalize:**
-              *   Show genuine interest by connecting your reason for reaching out to their specific industry or company.
-              *   Use the "AI Insights" from the notes to mention something specific and positive about their company (e.g., a recent product launch, a news article, an interesting project mentioned on their website). This shows you've done your homework.
-              *   Clearly state the purpose of your follow-up, framing it in terms of a mutual benefit or a solution to a problem they might have.
-          *   **Call to Action:** End with a single, clear, and easy-to-act-on call to action (e.g., "Are you free for a 15-minute call next week to discuss this further?").
-          *   **Closing:** Use a professional closing (e.g., "Best regards," or "Looking forward to hearing from you,").
-          *   **Signature:** Sign off literally as "[Your Name]". Do not invent a name.
+Please include a compelling subject line as well.`;
 
-      The final email should be concise, professional, and feel highly personalized, not like a generic template.
-    `;
-
-    try {
-        console.log('[Gemini] Generating email with gemini-2.5-flash (reliable model)...');
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-        });
-
-        return response.text;
-    } catch (error) {
-        console.error('[Gemini] Email generation failed:', error);
-        throw new Error(`Failed to generate email. Please check your API key and try again. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    // Return the prompt directly without calling the AI
+    // Users will copy this and paste it into their preferred AI service
+    return promptForUser;
 }
 
 
@@ -170,22 +160,24 @@ export async function recommendWebsite(company: string, email: string): Promise<
 
 export async function getAIInsights(firstName: string, lastName: string, company: string, title: string, website: string): Promise<string> {
     const prompt = `
-        As a business intelligence analyst, perform a quick web search on the person "${firstName} ${lastName}" (${title}) and the company "${company}". 
-        The company's website is "${website}".
-        
-        Provide a concise summary in markdown format with the following three sections:
+        Research "${firstName} ${lastName}" (${title} at ${company}) and their company.
+        Company website: "${website}"
 
-        ### Company Snapshot
-        Briefly describe what the company does, its main products/services, and its target market based on their website.
+        Provide a SHORT, actionable research note with these sections:
 
-        ### Role Insights
-        Based on their title ("${title}"), what are their likely key responsibilities and business priorities? What kind of challenges might they be facing?
+        ### Quick Company Overview
+        In 2-3 sentences: What does ${company} do? What's their main focus or specialty?
 
-        ### Conversation Starters
-        Find recent news, company announcements, or professional activities of the person. Suggest 2-3 specific, personalized icebreakers or talking points for a follow-up email. Frame them as engaging questions or observations.
+        ### About ${firstName}
+        In 2-3 sentences: Based on their ${title} role, what are their likely priorities and challenges? What would they care about?
 
-        If you cannot find specific information for a section, state that clearly. Do not fabricate information.
-        The entire output should be formatted as markdown.
+        ### Recent News & Talking Points
+        Find 1-2 recent, specific items (news, product launches, company updates, or professional activities).
+        Present as bullet points with dates if available.
+        These should be concrete conversation starters, not generic observations.
+
+        Keep it concise and focused. Only include verifiable information from web search.
+        If you can't find specific information for a section, write "No recent information found" instead of guessing.
     `;
 
     const response = await ai.models.generateContent({
