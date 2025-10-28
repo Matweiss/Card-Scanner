@@ -144,18 +144,40 @@ export async function transcribeAudio(audioData: { data: string, mimeType: strin
 export async function recommendWebsite(company: string, email: string): Promise<string> {
     const prompt = `Based on the company name "${company}" and contact email "${email}", find the official website URL. Return only the URL, with no additional text, headers, or markdown. For example: https://www.example.com`;
 
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-            tools: [{ googleSearch: {} }],
-        },
-    });
-    
-    const urlRegex = /(https?:\/\/[^\s]+)/;
-    const match = response.text.match(urlRegex);
+    try {
+        console.log('[Gemini] Recommending website with search...');
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                tools: [{ googleSearch: {} }],
+            },
+        });
 
-    return match ? match[0].trim() : response.text.trim();
+        const urlRegex = /(https?:\/\/[^\s]+)/;
+        const match = response.text.match(urlRegex);
+
+        return match ? match[0].trim() : response.text.trim();
+    } catch (error) {
+        console.error('[Gemini] Website recommendation with search failed, trying without search...', error);
+
+        // Fallback: try without search (will make best guess from company name and email)
+        try {
+            const fallbackResponse = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+            });
+
+            const urlRegex = /(https?:\/\/[^\s]+)/;
+            const match = fallbackResponse.text.match(urlRegex);
+
+            return match ? match[0].trim() : fallbackResponse.text.trim();
+        } catch (fallbackError) {
+            console.error('[Gemini] Fallback website recommendation also failed:', fallbackError);
+            // Return empty string so the field remains editable
+            return '';
+        }
+    }
 }
 
 export async function getAIInsights(firstName: string, lastName: string, company: string, title: string, website: string): Promise<string> {
@@ -180,13 +202,49 @@ export async function getAIInsights(firstName: string, lastName: string, company
         If you can't find specific information for a section, write "No recent information found" instead of guessing.
     `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        tools: [{googleSearch: {}}],
-      },
-    });
+    try {
+        console.log('[Gemini] Getting AI insights with search...');
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                tools: [{googleSearch: {}}],
+            },
+        });
 
-    return `\n\n--- AI Insights ---\n${response.text.trim()}`;
+        return `\n\n--- AI Insights ---\n${response.text.trim()}`;
+    } catch (error) {
+        console.error('[Gemini] AI insights with search failed, trying without search...', error);
+
+        // Fallback: generate insights without web search (based on role and industry knowledge)
+        const fallbackPrompt = `
+            Based on typical industry knowledge, provide insights about "${firstName} ${lastName}" (${title} at ${company}).
+            Company website: "${website}"
+
+            Provide a SHORT note with these sections:
+
+            ### Quick Company Overview
+            Based on the company name and website domain, infer what ${company} likely does (2-3 sentences).
+
+            ### About ${firstName}
+            Based on their ${title} role, what are typical priorities and challenges for this position? (2-3 sentences)
+
+            ### Note
+            State: "Unable to fetch recent news due to service limitations. Please visit ${website} for the latest updates."
+
+            Keep it concise and clearly indicate this is general industry knowledge, not specific research.
+        `;
+
+        try {
+            const fallbackResponse = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: fallbackPrompt,
+            });
+
+            return `\n\n--- AI Insights (Limited) ---\n${fallbackResponse.text.trim()}`;
+        } catch (fallbackError) {
+            console.error('[Gemini] Fallback insights also failed:', fallbackError);
+            return `\n\n--- AI Insights ---\nUnable to generate insights at this time. Please try again later.`;
+        }
+    }
 }
